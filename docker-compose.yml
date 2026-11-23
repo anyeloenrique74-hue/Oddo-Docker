@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: odoo
+      POSTGRES_PASSWORD: odoo
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - odoo-db-data:/var/lib/postgresql/data/pgdata
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U odoo -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  odoo:
+    image: odoo:19.0 # cambia por la versión que necesites
+    depends_on:
+      - db
+    ports:
+      - "8010:8069"
+    environment:
+      HOST: db
+      USER: odoo
+      PASSWORD: odoo
+    volumes:
+      - odoo-web-data:/var/lib/odoo # filestore (adjuntos, sesiones)
+      - ./config:/etc/odoo # configuración
+      - ./addons:/mnt/extra-addons # módulos propios
+    restart: unless-stopped
+
+volumes:
+  odoo-db-data:
+  odoo-web-data:
